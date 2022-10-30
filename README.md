@@ -263,6 +263,13 @@ export default class HTTPError extends Error {
  ##### 하루동안 함께 시행착오를 한 기록을 담았습니다 !
  
 - 무한 API 호출 문제 해결 : 페이지의 마지막을 확인할 수 있는 상태를 추가하여 페이지 마지막에서 api 호출하고 더이상 불러올 데이터가 없을 시 api 호출을 하지 않도록하였습니다.
+<br />
+**수정 전**
+<img width="500" src="https://user-images.githubusercontent.com/83333409/198885118-10dd9434-34c2-4af1-9055-2684890dcbe6.gif"/>
+<br />
+**수정 후**
+<img width="500" src="https://user-images.githubusercontent.com/83333409/198885336-38510ffe-0e24-4010-9229-ab53ea785dcc.png"/>
+<br />
 
 - 원하는 페이지에서만 헤더가 나오도록 개선 : Layout 컴포넌트 내에 해더를 추가하고 issue data가 있을 때만 보여질 수 있도록 처리하였습니다.
 
