@@ -138,7 +138,7 @@ $ npm start
 <div markdown="1">
 
 ```
-📦src
+📦src 
  ┣ 📂components
  ┃ ┃ ┣ 📂issueItem
  ┃ ┃ ┃ ┣ 📜IssueItem.jsx
@@ -192,32 +192,83 @@ $ npm start
 
 ## 👍 Best Practice 선정 이유
 
-- 
+- 커스텀 훅을 활용하여 네트워크 통신을 통해 받아온 데이터를 오브젝트에 저장하여, 한번 참조한 페이지는 
+다시 데이터를 받아올 필요 없어 성능이 보다 향상되었기 때문에 선정하였습니다.
+
+```javascript
+const useFetch = () => {
+  const { issues, setIssues, page } = useContext(ListContext);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [lastPage, setLastPage] = useState(false);
+  const getList = async () => {
+    setIsLoading(true);
+    try {
+      const data = await getIssueList(page);
+      if (data.length === 0) {
+        setLastPage(true);
+      }
+      setIssues(prev => {
+        const updated = { ...prev };
+        data.forEach(issue => {
+          updated[issue.id] = issue;
+        });
+        return updated;
+      });
+    } catch (error) {
+      setError(error.errorMessage);
+    }
+    setIsLoading(false);
+  };
+  useEffect(() => {
+    getList();
+  }, [page]);
+
+  return [isLoading, error, issues, lastPage];
+};
+```
+
+- 무한스크롤 구현할 때 스크롤이벤트로 발생할 수 있는 리플로 문제를 intersection Observer API로 해결되었기 때문에 선정하였습니다.
+<br />
+- 커스텀 에러 클래스를 이용하여 status code에 따른 예외처리되었기 때문에 선정하였습니다.
+
+```javascript
+export default class HTTPError extends Error {
+  constructor(statusCode, message) {
+    super(message);
+    this.name = 'HTTPError';
+    this.statusCode = statusCode;
+  }
+
+  get errorMessage() {
+    switch (this.statusCode) {
+      case 404:
+        this.message = '해당 레포를 찾을 수 없습니다.';
+        break;
+      case 422:
+        this.message = '요청이 잘못된 endpoint로 전달되었습니다';
+        break;
+      default:
+        throw new Error('Unknown Error');
+    }
+    return this.message;
+  }
+}
+```
 
 
 
 ## ✏️ 개선 부분
 
- 하루동안 함께 시행착오를 한 기록을 담았습니다!
+ ##### 하루동안 함께 시행착오를 한 기록을 담았습니다 !
  
-두개 였던 API 하나로 사용한 이유 : 디테일로 들어가든 홈으로 가든 받아오는 List는 하나이기에 라우터 설정(리다이랙트)
-무한 API 호출 문제 해결!!  상세 페이지에서 메인으로 가도 상태 그대로를 가지고 있다. 공통 헤더는 레이아웃을 하나 만들어쓰면 편하다. 
+- 무한 API 호출 문제 해결 : 페이지의 마지막을 확인할 수 있는 상태를 추가하여 페이지 마지막에서 api 호출하고 더이상 불러올 데이터가 없을 시 api 호출을 하지 않도록하였습니다.
 
-무한 스크롤 쓰면서 성능을 신경썼다!? 그래서 배열이 아닌 객체 자료구조를 선택하여 만들었다. 만약 해당 id값을 넣어서 가진 객체를 찾아라라고 한다면 배열은 처음부터 끝까지 찾아야하지만 객체는 key만 넣어주면 바로 가져올 수 있다. 시간 복잡도 측면에서는 객체가 배열보다 유리하다. 
+- 원하는 페이지에서만 헤더가 나오도록 개선 : Layout 컴포넌트 내에 해더를 추가하고 issue data가 있을 때만 보여질 수 있도록 처리하였습니다.
 
-네티워크 통신을 위해 오브젝트 사용(데이터베이스 역할?)  (얕은 복사)-> 중복 제거,  시간 복잡도, 캐쉬, 성능 최적화
-캐시를 하여 성능 최적화하였다.
-배열로 데이터를 캐시를 한다면 중복이 발생 -> 따라서 오브젝트 사용 
+- 에러 페이지 추가 : 설정되지 않은 path로 엑세스 했을 때 `/`으로 리다이렉트 해줄 수 있는 Not Found 페이지 추가하였습니다.
 
-에러 
-상세페이지에서 리로딩 했을 경우, error-screen페이지가 나타남
-해결 
-
-
-
-## ✏️ action-point 보러가기 [위키의 dev노트 보러가기 😗](https://github.com/wanted-freeOnBoarding-8/1-1_assignment/wiki/Dev-%EB%85%B8%ED%8A%B8)
-
- 
+---
 
 ## ✨ 주요 기능
 
@@ -252,37 +303,37 @@ $ npm start
 
 3. 기능 데모 영상 
 
-- 페이지 이동
+- <div>페이지 이동</div>
 <img src="https://user-images.githubusercontent.com/93697790/198881444-74b5b296-3daf-463e-85b9-3a03c032b0a3.gif"
 width="600px">
 </br>
 
-- 메인 페이지 반응형
+- <div>메인 페이지 반응형</div>
 <img src="https://user-images.githubusercontent.com/93697790/198881506-9a40a5d4-73b9-43b5-81ee-73d34b8a8b77.gif"
 width="600px">
 <br>
 
-- 무한스크롤 기능 구현
+- <div>무한스크롤 기능 구현</div>
 <img src="https://user-images.githubusercontent.com/93697790/198881566-fd562e4b-5eb4-4587-b8f2-eeecf25cc93f.gif"
 width="600px">
 <br>
 
-- 디테일 페이지 반응형 
+- <div>디테일 페이지 반응형</div> 
 <img src="https://user-images.githubusercontent.com/93697790/198881136-64855524-44ba-4715-96ca-8af369315e1b.gif"
 width="600px">
 <br>
 
-- Detail 페이지에서 Home으로 가기
+- <div>Detail 페이지에서 Home으로 가기</div>
 <img src="https://user-images.githubusercontent.com/93697790/198881230-e3652277-8aef-4c47-a323-fd1dd48cc40a.gif"
 width="600px">
 <br>
 
-- 404 페이지
+- <div>404 페이지</div>
 <img src="https://user-images.githubusercontent.com/93697790/198881263-e41a5046-1c6a-43d4-be62-dd7f21b1df36.gif"
 width="600px">
 <br>
 
-- notFound 페이지 
+- <div>NotFound 페이지</div> 
 <img src="https://user-images.githubusercontent.com/93697790/198881342-b03ad0e7-086a-48bd-a90a-c6cd595b1a3d.gif"
 width="600px">
 <br>
